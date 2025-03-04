@@ -135,6 +135,14 @@
         border-radius: 2px;
       }
     </style>
+    <script>
+      // Request notification permission when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+          if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+              Notification.requestPermission();
+          }
+      });
+    </script>
   </head>
 <body>
     <div class="top-bar">
@@ -209,6 +217,14 @@
             "</small>" +
             data.val().msg +
             "</div></div>";
+            
+          // Send notification if page is not visible
+          if (document.hidden && Notification.permission === 'granted') {
+            new Notification('New message from ' + data.val().sender, {
+              body: data.val().msg,
+              icon: '💬'
+            });
+          }
         }
         // Auto scroll to latest message
         messages.scrollTop = messages.scrollHeight;
