@@ -13,94 +13,99 @@
       body {
         margin: 0;
         padding: 0;
-        background: #000;
+        background: #121212;
+        color: #ffffff;
       }
       #messages {
         position: fixed;
         left: 0;
         top: 0;
         width: 100%;
-        height: calc(100% - 120px);
-        background: #393e46;
+        height: calc(100% - 60px);
+        background: #121212;
         overflow-y: auto;
         padding: 15px;
         box-sizing: border-box;
-        font-family: sans-serif;
-        font-size: 18px;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 15px;
       }
       #sendMsg {
         position: fixed;
         left: 0;
         bottom: 0;
         width: 100%;
-        height: 120px;
-        background: #aaa;
-        font-family: "Big Shoulders", sans-serif;
+        height: 60px;
+        background: #121212;
+        padding: 10px 15px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-top: 1px solid #222222;
       }
       #msgTxt {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: calc(100% - 120px);
-        height: 100%;
-        padding: 15px;
-        font-size: 18px;
-        box-sizing: border-box;
-        background-color: #222831;
-        color: #00adb5;
-        font-family: "Big Shoulders", sans-serif;
+        flex: 1;
+        height: 40px;
+        padding: 0 15px;
+        font-size: 15px;
+        background-color: #1e1e1e;
+        color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         border: none;
+        border-radius: 20px;
+      }
+      #msgTxt::placeholder {
+        color: #666666;
       }
       #msgBtn {
-        position: absolute;
-        right: 0;
-        top: 0;
-        width: 120px;
-        height: 100%;
-        background-color: #222831;
-        color: #00adb5;
-        font-family: "Big Shoulders", sans-serif;
-        font-size: 24px;
+        width: 40px;
+        height: 40px;
+        background-color: #4CAF50;
+        color: white;
         border: none;
-        border-left: solid 2px;
-        border-radius: 0px;
+        border-radius: 50%;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       .outer {
         width: 100%;
-        margin-top: 15px;
+        margin-top: 8px;
         display: flex;
       }
       #inner {
-        padding: 15px;
+        padding: 8px 12px;
         box-sizing: border-box;
-        border-radius: 15px;
-        color: #eeeeee;
-        background-color: #222831;
-        font-size: 18px;
-        max-width: 80%;
+        border-radius: 16px;
+        font-size: 15px;
+        max-width: 70%;
       }
       .me {
-        background: #8800ff;
-        color: #fff;
+        background: #4CAF50;
+        color: #ffffff;
+        margin-left: auto;
       }
       .notMe {
-        background: #fff;
-        color: #000;
+        background: #1e1e1e;
+        color: #ffffff;
+      }
+      #dltMsg {
+        display: none;
       }
     </style>
   </head>
 
   <body>
+    <div style="background: #121212; padding: 10px 15px; display: flex; align-items: center; border-bottom: 1px solid #222222;">
+      <span style="color: #ffffff; font-size: 20px; margin-right: 15px;">←</span>
+      <span style="color: #888888; font-size: 14px;">mitch@gmail.com</span>
+    </div>
     <div id="messages"></div>
 
     <div id="sendMsg">
-      <input type="text" id="msgTxt" placeholder="ENTER YOUR MSG..." />
-      <input
-        type="submit"
-        id="msgBtn"
-        value="SEND"
-        onclick="module.sendMsg()"
-      />
+      <input type="text" id="msgTxt" placeholder="Type a message" />
+      <button id="msgBtn" onclick="module.sendMsg()">↑</button>
     </div>
 
     <script>
@@ -155,20 +160,18 @@
       onChildAdded(ref(db, "messages"), (data) => {
         if (data.val().sender == sender) {
           messages.innerHTML +=
-            "<div style=justify-content:end class=outer id=" +
+            "<div style='justify-content:end' class='outer' id=" +
             data.key +
-            "><div id=inner class=me>you : " +
+            "><div id='inner' class='me'><small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>You</small>" +
             data.val().msg +
-            "<button id=dltMsg onclick=module.dltMsg(" +
-            data.key +
-            ")>DELETE</button></div></div>";
+            "</div></div>";
         } else {
           messages.innerHTML +=
-            "<div class=outer id=" +
+            "<div class='outer' id=" +
             data.key +
-            "><div id=inner class=notMe>" +
+            "><div id='inner' class='notMe'><small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>" +
             data.val().sender +
-            " : " +
+            "</small>" +
             data.val().msg +
             "</div></div>";
         }
