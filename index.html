@@ -198,12 +198,13 @@
         color: #003b02;
       }
       .seen-text {
-        font-size: 12px;
-        color: #000000;
+        font-size: 11px;
+        color: #e0e0e0;
         margin-top: 4px;
         font-style: italic;
+        opacity: 0.8;
       }
-
+        
     </style>
     <script>
       // Request notification permission when page loads
@@ -333,76 +334,85 @@
           messages.scrollTop = messages.scrollHeight;
         }
       };
+      // Helper function to format time ago
+            function getTimeAgo(timestamp) {
+              const now = new Date().getTime();
+              const diff = now - timestamp;
+              
+              if (diff < 60000) return 'just now';
+              if (diff < 3600000) return `${Math.floor(diff/60000)}m ago`;
+              if (diff < 86400000) return `${Math.floor(diff/3600000)}h ago`;
+              return `${Math.floor(diff/86400000)}d ago`;
+            }
       // Update seen functionality
-      function updateSeenStatus(messageId) {
-        if ((sender === 'lakshya' || sender === 'apoorva')) {
-          update(ref(db, "messages/" + messageId), {
-            seen: true,
-            seenAt: new Date().getTime()
+            function updateSeenStatus(messageId, messageSender) {
+              if ((sender === 'lakshya' || sender === 'apoorva') && 
+                  (messageSender === 'lakshya' || messageSender === 'apoorva')) {
+                update(ref(db, "messages/" + messageId), {
+                  seen: true,
+                  seenAt: new Date().getTime(),
+                  seenBy: sender
+                });
+              }
+            }// Message display update
+                  onChildAdded(ref(db, "messages"), (data) => {
+                    let replyHtml = '';
+                    if (data.val().replyTo) {
+                      replyHtml = `
+                        <div class="reply-reference">
+                          <small>${data.val().replyTo.sender}: ${data.val().replyTo.content}</small>
+                        </div>`;
+                    }
+                    const escapedMsg = data.val().msg
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
+                    if (data.val().sender == sender) {
+                      messages.innerHTML +=
+                        `<div style='justify-content:end' class='outer' id="${data.key}">
+                          <div id='inner' class='me'>
+                            ${replyHtml}
+                            <small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>You</small>
+                            <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">
+                              ${escapedMsg}
+                            </div>
+                            ${(sender === 'lakshya' || sender === 'apoorva') ? 
+                              `<div class="seen-text" id="seen-${data.key}">
+                                ${data.val().seen && data.val().seenBy !== 'admin' ? `Seen ${getTimeAgo(data.val().seenAt)}` : 'Sent'}
+                              </div>` : ''}
+                            </div>
+                          </div>`;
+                    } else {
+                      messages.innerHTML +=
+                        `<div class='outer' id="${data.key}">
+                          <div id='inner' class='notMe'>
+                            ${replyHtml}
+                            <small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>${data.val().sender}</small>
+                            <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">${escapedMsg}</div>
+                          </div>
+                        </div>`;
+            // Update seen status if message is from the other user
+                        if ((sender === 'lakshya' && data.val().sender === 'apoorva') || 
+                            (sender === 'apoorva' && data.val().sender === 'lakshya')) {
+                          updateSeenStatus(data.key, data.val().sender);
+                        }
+                      }
+            // Add notification for new messages
+            const now = new Date().getTime();
+            if (data.val().sender !== sender && 
+                data.val().timestamp > (now - 1000) && 
+                "Notification" in window && 
+                Notification.permission === "granted") {
+              new Notification("New Message from " + data.val().sender, {
+                body: data.val().msg,
+                icon: "💬",
+                silent: false
+              });
+            }
+            messages.scrollTop = messages.scrollHeight;
           });
-        }
-      }
-      // Message display update
-      onChildAdded(ref(db, "messages"), (data) => {
-        let replyHtml = '';
-        if (data.val().replyTo) {
-          replyHtml = `
-            <div class="reply-reference">
-              <small>${data.val().replyTo.sender}: ${data.val().replyTo.content}</small>
-            </div>`;
-        }
-
-        const escapedMsg = data.val().msg
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-
-        if (data.val().sender == sender) {
-          messages.innerHTML +=
-            `<div style='justify-content:end' class='outer' id="${data.key}">
-              <div id='inner' class='me'>
-                ${replyHtml}
-                <small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>You</small>
-                <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">
-                  ${escapedMsg}
-                </div>
-                <div class="seen-text" id="seen-${data.key}">
-                  ${data.val().seen ? 'Seen' : ''}
-                </div>
-              </div>
-            </div>`;
-        } else {
-          messages.innerHTML +=
-            `<div class='outer' id="${data.key}">
-              <div id='inner' class='notMe'>
-                ${replyHtml}
-                <small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>${data.val().sender}</small>
-                <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">${escapedMsg}</div>
-              </div>
-            </div>`;
-
-          // Update seen status if message is from the other user
-          if ((sender === 'lakshya' && data.val().sender === 'apoorva') || 
-              (sender === 'apoorva' && data.val().sender === 'lakshya')) {
-            setTimeout(() => updateSeenStatus(data.key), 1000);
-          }
-        }
-        // Add notification for new messages
-        const now = new Date().getTime();
-        if (data.val().sender !== sender && 
-            data.val().timestamp > (now - 1000) && 
-            "Notification" in window && 
-            Notification.permission === "granted") {
-          new Notification("New Message from " + data.val().sender, {
-            body: data.val().msg,
-            icon: "💬",
-            silent: false
-          });
-        }
-        messages.scrollTop = messages.scrollHeight;
-      });
       // TO DELETE MSG
       module.dltMsg = function dltMsg(key) {
         remove(ref(db, "messages/" + key));
