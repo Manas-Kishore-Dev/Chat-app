@@ -275,7 +275,11 @@
         return allowedUsers.includes(username.toLowerCase());
       }
 
-      if (sessionStorage.getItem("sender")) {
+      function verifyPassword(password) {
+        return password === 'Lakshya&Apoorva_Password';
+      }
+
+      if (sessionStorage.getItem("sender") && sessionStorage.getItem("authenticated")) {
         sender = sessionStorage.getItem("sender");
         if (!isValidUser(sender)) {
           alert("Access denied. You are not authorized to use this chat.");
@@ -287,9 +291,19 @@
           sender = prompt("PLEASE ENTER YOUR NAME");
           if (!isValidUser(sender)) {
             alert("Access denied. Please enter a valid username.");
+            continue;
           }
-        } while (!isValidUser(sender));
-        sessionStorage.setItem("sender", sender);
+          
+          const password = prompt("PLEASE ENTER PASSWORD");
+          if (!verifyPassword(password)) {
+            alert("Incorrect password. Access denied.");
+            continue;
+          }
+
+          sessionStorage.setItem("sender", sender);
+          sessionStorage.setItem("authenticated", "true");
+          break;
+        } while (true);
       }
 
       // TO SEND MESSAGES
