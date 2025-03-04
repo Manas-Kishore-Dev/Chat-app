@@ -156,13 +156,25 @@
         font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 14px;
         line-height: 1.4;
+        box-sizing: border-box;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
       .reply-close {
-        float: right;
         cursor: pointer;
         color: #888888;
-        margin-left: 12px;
         padding: 4px;
+        margin-left: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #replyText {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .message-content {
         cursor: pointer;
@@ -233,10 +245,26 @@
       // variables
       var msgTxt = document.getElementById("msgTxt");
       var sender;
+      
+      function isValidUser(username) {
+        const allowedUsers = ['lakshya', 'apoorva', 'firebase_console', ''];
+        return allowedUsers.includes(username.toLowerCase());
+      }
+
       if (sessionStorage.getItem("sender")) {
         sender = sessionStorage.getItem("sender");
+        if (!isValidUser(sender)) {
+          alert("Access denied. You are not authorized to use this chat.");
+          document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;color:white;font-family:sans-serif">Access Denied</div>';
+          throw new Error("Unauthorized access");
+        }
       } else {
-        sender = prompt("PLEASE ENTER YOUR NAME");
+        do {
+          sender = prompt("PLEASE ENTER YOUR NAME");
+          if (!isValidUser(sender)) {
+            alert("Access denied. Please enter a valid username.");
+          }
+        } while (!isValidUser(sender));
         sessionStorage.setItem("sender", sender);
       }
 
