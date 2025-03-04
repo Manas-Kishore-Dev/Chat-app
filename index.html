@@ -278,11 +278,14 @@
       var sender;
       
       function isValidUser(username) {
-        const allowedUsers = ['lakshya', 'apoorva', 'firebase_console', ' '];
+        const allowedUsers = ['lakshya', 'apoorva', 'admin', ' '];
         return allowedUsers.includes(username.toLowerCase());
       }
 
-      function verifyPassword(password) {
+      function verifyPassword(password, username) {
+        if (username.toLowerCase() === 'admin') {
+          return password === 'Devrier_Dev';
+        }
         return password === 'Lakshya&Apoorva_Password';
       }
 
@@ -302,7 +305,7 @@
           }
           
           const password = prompt("PLEASE ENTER PASSWORD");
-          if (!verifyPassword(password)) {
+          if (!verifyPassword(password, sender)) {
             alert("Incorrect password. Access denied.");
             continue;
           }
@@ -380,14 +383,13 @@
               </div>
             </div>`;
 
-          // Update seen status if message is from the other user (Lakshya/Apoorva)
+          // Update seen status if message is from the other user
           if ((sender === 'lakshya' && data.val().sender === 'apoorva') || 
               (sender === 'apoorva' && data.val().sender === 'lakshya')) {
             setTimeout(() => updateSeenStatus(data.key), 1000);
           }
         }
         // Add notification for new messages
-        // Only show notification for messages with timestamps within the last second
         const now = new Date().getTime();
         if (data.val().sender !== sender && 
             data.val().timestamp > (now - 1000) && 
