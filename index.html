@@ -197,6 +197,13 @@
       .message-status.seen {
         color: #4CAF50;
       }
+      .seen-text {
+        font-size: 12px;
+        color: #888888;
+        margin-top: 4px;
+        font-style: italic;
+      }
+
     </style>
     <script>
       // Request notification permission when page loads
@@ -315,7 +322,7 @@
             msg: msg,
             sender: sender,
             replyTo: replyingTo,
-            status: 'sent',
+            seen: false,
             timestamp: timestamp
           });
           msgTxt.value = "";
@@ -323,34 +330,16 @@
           messages.scrollTop = messages.scrollHeight;
         }
       };
-      // Add message seen functionality
-      function updateMessageStatus(messageId, status) {
+      // Update seen functionality
+      function updateSeenStatus(messageId) {
         if ((sender === 'lakshya' || sender === 'apoorva')) {
           update(ref(db, "messages/" + messageId), {
-            status: status,
+            seen: true,
             seenAt: new Date().getTime()
           });
         }
       }
-      // Listen for status changes in real-time
-      onValue(ref(db, "messages"), (snapshot) => {
-        snapshot.forEach((child) => {
-          const msgElement = document.getElementById(child.key);
-          if (msgElement && child.val().sender === sender) {
-            const statusSpan = msgElement.querySelector('.message-status');
-            if (statusSpan && child.val().status) {
-              const isLakshyaApoorva = (sender === 'lakshya' && child.val().recipient === 'apoorva') || 
-                                     (sender === 'apoorva' && child.val().recipient === 'lakshya');
-              
-              if (isLakshyaApoorva) {
-                statusSpan.textContent = child.val().status === 'seen' ? '✓✓' : '✓';
-                statusSpan.className = `message-status ${child.val().status === 'seen' ? 'seen' : ''}`;
-              }
-            }
-          }
-        });
-      });
-      // Update seen status when receiving messages
+      // Message display update
       onChildAdded(ref(db, "messages"), (data) => {
         let replyHtml = '';
         if (data.val().replyTo) {
@@ -368,9 +357,6 @@
           .replace(/'/g, "&#039;");
 
         if (data.val().sender == sender) {
-          const statusIcon = data.val().status === 'seen' ? '✓✓' : '✓';
-          const statusClass = data.val().status === 'seen' ? 'seen' : '';
-          
           messages.innerHTML +=
             `<div style='justify-content:end' class='outer' id="${data.key}">
               <div id='inner' class='me'>
@@ -378,7 +364,9 @@
                 <small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>You</small>
                 <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">
                   ${escapedMsg}
-                  <span class="message-status ${statusClass}">${statusIcon}</span>
+                </div>
+                <div class="seen-text" id="seen-${data.key}">
+                  ${data.val().seen ? 'Seen' : ''}
                 </div>
               </div>
             </div>`;
@@ -395,7 +383,7 @@
           // Update seen status if message is from the other user (Lakshya/Apoorva)
           if ((sender === 'lakshya' && data.val().sender === 'apoorva') || 
               (sender === 'apoorva' && data.val().sender === 'lakshya')) {
-            setTimeout(() => updateMessageStatus(data.key, 'seen'), 1000);
+            setTimeout(() => updateSeenStatus(data.key), 1000);
           }
         }
         // Add notification for new messages
