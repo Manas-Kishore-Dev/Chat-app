@@ -135,28 +135,34 @@
         border-radius: 2px;
       }
       .reply-reference {
-        font-size: 12px;
-        padding: 4px 8px;
-        margin-bottom: 4px;
-        background: rgba(255, 255, 255, 0.1);
-        border-left: 2px solid #4CAF50;
+        font-size: 13px;
+        padding: 6px 10px;
+        margin-bottom: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border-left: 3px solid #4CAF50;
         border-radius: 4px;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        line-height: 1.3;
       }
       .reply-to {
         position: fixed;
         bottom: 60px;
         left: 0;
         width: 100%;
-        padding: 8px 15px;
+        padding: 12px 15px;
         background: #1e1e1e;
         border-top: 1px solid #222222;
         display: none;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
       }
       .reply-close {
         float: right;
         cursor: pointer;
-        color: #666666;
-        margin-left: 8px;
+        color: #888888;
+        margin-left: 12px;
+        padding: 4px;
       }
       .message-content {
         cursor: pointer;
@@ -192,6 +198,22 @@
     <script>
       module = {};
       let replyingTo = null;
+
+      // Add these functions to make reply work
+      module.setReply = function(messageId, sender, content) {
+        replyingTo = {
+          messageId: messageId,
+          sender: sender,
+          content: content
+        };
+        document.getElementById('replyContainer').style.display = 'block';
+        document.getElementById('replyText').innerHTML = `Replying to ${sender}: ${content}`;
+      };
+
+      module.cancelReply = function() {
+        replyingTo = null;
+        document.getElementById('replyContainer').style.display = 'none';
+      };
     </script>
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
@@ -239,9 +261,16 @@
         if (data.val().replyTo) {
           replyHtml = `
             <div class="reply-reference">
-              <small>${data.val().replyTo.sender}: ${data.val().replyTo.content.substring(0, 30)}${data.val().replyTo.content.length > 30 ? '...' : ''}</small>
+              <small>${data.val().replyTo.sender}: ${data.val().replyTo.content}</small>
             </div>`;
         }
+
+        const escapedMsg = data.val().msg
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
 
         if (data.val().sender == sender) {
           messages.innerHTML +=
@@ -249,7 +278,7 @@
               <div id='inner' class='me'>
                 ${replyHtml}
                 <small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>You</small>
-                <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${data.val().msg.replace(/'/g, "\\'")}')">${data.val().msg}</div>
+                <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">${escapedMsg}</div>
               </div>
             </div>`;
         } else {
@@ -258,7 +287,7 @@
               <div id='inner' class='notMe'>
                 ${replyHtml}
                 <small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>${data.val().sender}</small>
-                <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${data.val().msg.replace(/'/g, "\\'")}')">${data.val().msg}</div>
+                <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">${escapedMsg}</div>
               </div>
             </div>`;
         }
