@@ -104,7 +104,7 @@
     <div id="messages"></div>
 
     <div id="sendMsg">
-      <input type="text" id="msgTxt" placeholder="Type a message" />
+      <input type="text" id="msgTxt" placeholder="Type a message" onkeydown="if(event.key === 'Enter') module.sendMsg()" />
       <button id="msgBtn" onclick="module.sendMsg()">↑</button>
     </div>
 
@@ -147,15 +147,17 @@
       // TO SEND MESSAGES
       module.sendMsg = function sendMsg() {
         var msg = msgTxt.value;
-        var timestamp = new Date().getTime();
-        set(ref(db, "messages/" + timestamp), {
-          msg: msg,
-          sender: sender,
-        });
-
-        msgTxt.value = "";
+        if (msg.trim() !== '') {  // Only send if message isn't empty
+          var timestamp = new Date().getTime();
+          set(ref(db, "messages/" + timestamp), {
+            msg: msg,
+            sender: sender,
+          });
+          msgTxt.value = "";
+          // Auto scroll after sending
+          messages.scrollTop = messages.scrollHeight;
+        }
       };
-
       // TO RECEIVE MSG
       onChildAdded(ref(db, "messages"), (data) => {
         if (data.val().sender == sender) {
@@ -175,6 +177,8 @@
             data.val().msg +
             "</div></div>";
         }
+        // Auto scroll to latest message
+        messages.scrollTop = messages.scrollHeight;
       });
 
       // TO DELETE MSG
