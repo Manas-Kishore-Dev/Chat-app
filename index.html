@@ -134,6 +134,33 @@
         transform: translateX(-50%);
         border-radius: 2px;
       }
+      .reply-reference {
+        font-size: 12px;
+        padding: 4px 8px;
+        margin-bottom: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-left: 2px solid #4CAF50;
+        border-radius: 4px;
+      }
+      .reply-to {
+        position: fixed;
+        bottom: 60px;
+        left: 0;
+        width: 100%;
+        padding: 8px 15px;
+        background: #1e1e1e;
+        border-top: 1px solid #222222;
+        display: none;
+      }
+      .reply-close {
+        float: right;
+        cursor: pointer;
+        color: #666666;
+        margin-left: 8px;
+      }
+      .message-content {
+        cursor: pointer;
+      }
     </style>
     <script>
       // Request notification permission when page loads
@@ -152,6 +179,11 @@
     <div class="divider"></div>
     <div id="messages"></div>
 
+    <div id="replyContainer" class="reply-to">
+      <span id="replyText"></span>
+      <span class="reply-close material-icons" onclick="module.cancelReply()">close</span>
+    </div>
+
     <div id="sendMsg">
       <input type="text" id="msgTxt" placeholder="Type a message" onkeydown="if(event.key === 'Enter') module.sendMsg()" />
       <button id="msgBtn" onclick="module.sendMsg()"><span class="material-icons">send</span></button>
@@ -159,6 +191,7 @@
 <script src="env.js"></script>
     <script>
       module = {};
+      let replyingTo = null;
     </script>
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
@@ -188,48 +221,49 @@
       // TO SEND MESSAGES
       module.sendMsg = function sendMsg() {
         var msg = msgTxt.value;
-        if (msg.trim() !== '') {  // Only send if message isn't empty
+        if (msg.trim() !== '') {
           var timestamp = new Date().getTime();
           set(ref(db, "messages/" + timestamp), {
             msg: msg,
             sender: sender,
+            replyTo: replyingTo
           });
           msgTxt.value = "";
-          // Auto scroll after sending
+          module.cancelReply();
           messages.scrollTop = messages.scrollHeight;
         }
       };
       // TO RECEIVE MSG
       onChildAdded(ref(db, "messages"), (data) => {
+        let replyHtml = '';
+        if (data.val().replyTo) {
+          replyHtml = `
+            <div class="reply-reference">
+              <small>${data.val().replyTo.sender}: ${data.val().replyTo.content.substring(0, 30)}${data.val().replyTo.content.length > 30 ? '...' : ''}</small>
+            </div>`;
+        }
+
         if (data.val().sender == sender) {
           messages.innerHTML +=
-            "<div style='justify-content:end' class='outer' id=" +
-            data.key +
-            "><div id='inner' class='me'><small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>You</small>" +
-            data.val().msg +
-            "</div></div>";
+            `<div style='justify-content:end' class='outer' id="${data.key}">
+              <div id='inner' class='me'>
+                ${replyHtml}
+                <small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>You</small>
+                <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${data.val().msg.replace(/'/g, "\\'")}')">${data.val().msg}</div>
+              </div>
+            </div>`;
         } else {
           messages.innerHTML +=
-            "<div class='outer' id=" +
-            data.key +
-            "><div id='inner' class='notMe'><small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>" +
-            data.val().sender +
-            "</small>" +
-            data.val().msg +
-            "</div></div>";
-            
-          // Send notification if page is not visible
-          if (document.hidden && Notification.permission === 'granted') {
-            new Notification('New message from ' + data.val().sender, {
-              body: data.val().msg,
-              icon: '💬'
-            });
-          }
+            `<div class='outer' id="${data.key}">
+              <div id='inner' class='notMe'>
+                ${replyHtml}
+                <small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>${data.val().sender}</small>
+                <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${data.val().msg.replace(/'/g, "\\'")}')">${data.val().msg}</div>
+              </div>
+            </div>`;
         }
-        // Auto scroll to latest message
         messages.scrollTop = messages.scrollHeight;
       });
-
       // TO DELETE MSG
       module.dltMsg = function dltMsg(key) {
         remove(ref(db, "messages/" + key));
