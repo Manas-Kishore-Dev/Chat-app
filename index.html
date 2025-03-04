@@ -313,11 +313,30 @@
       function updateMessageStatus(messageId, status) {
         if ((sender === 'lakshya' || sender === 'apoorva')) {
           update(ref(db, "messages/" + messageId), {
-            status: status
+            status: status,
+            seenAt: new Date().getTime()
           });
         }
       }
-      // Update message display to include status
+      // Listen for status changes in real-time
+      onValue(ref(db, "messages"), (snapshot) => {
+        snapshot.forEach((child) => {
+          const msgElement = document.getElementById(child.key);
+          if (msgElement && child.val().sender === sender) {
+            const statusSpan = msgElement.querySelector('.message-status');
+            if (statusSpan && child.val().status) {
+              const isLakshyaApoorva = (sender === 'lakshya' && child.val().recipient === 'apoorva') || 
+                                     (sender === 'apoorva' && child.val().recipient === 'lakshya');
+              
+              if (isLakshyaApoorva) {
+                statusSpan.textContent = child.val().status === 'seen' ? '✓✓' : '✓';
+                statusSpan.className = `message-status ${child.val().status === 'seen' ? 'seen' : ''}`;
+              }
+            }
+          }
+        });
+      });
+      // Update seen status when receiving messages
       onChildAdded(ref(db, "messages"), (data) => {
         let replyHtml = '';
         if (data.val().replyTo) {
@@ -362,11 +381,16 @@
           // Update seen status if message is from the other user (Lakshya/Apoorva)
           if ((sender === 'lakshya' && data.val().sender === 'apoorva') || 
               (sender === 'apoorva' && data.val().sender === 'lakshya')) {
-            updateMessageStatus(data.key, 'seen');
+            setTimeout(() => updateMessageStatus(data.key, 'seen'), 1000);
           }
         }
         // Add notification for new messages
-        if (data.val().sender !== sender && "Notification" in window && Notification.permission === "granted") {
+        // Only show notification for messages with timestamps within the last second
+        const now = new Date().getTime();
+        if (data.val().sender !== sender && 
+            data.val().timestamp > (now - 1000) && 
+            "Notification" in window && 
+            Notification.permission === "granted") {
           new Notification("New Message from " + data.val().sender, {
             body: data.val().msg,
             icon: "💬",
