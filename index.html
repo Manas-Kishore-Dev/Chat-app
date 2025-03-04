@@ -189,6 +189,14 @@
       .message-content {
         cursor: pointer;
       }
+      .message-status {
+        font-size: 12px;
+        margin-left: 5px;
+        color: #888888;
+      }
+      .message-status.seen {
+        color: #4CAF50;
+      }
     </style>
     <script>
       // Request notification permission when page loads
@@ -250,6 +258,8 @@
         remove,
         onChildAdded,
         onChildRemoved,
+        onValue,
+        update
       } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
       const firebaseConfig = window.env;
@@ -290,14 +300,24 @@
           set(ref(db, "messages/" + timestamp), {
             msg: msg,
             sender: sender,
-            replyTo: replyingTo
+            replyTo: replyingTo,
+            status: 'sent',
+            timestamp: timestamp
           });
           msgTxt.value = "";
           module.cancelReply();
           messages.scrollTop = messages.scrollHeight;
         }
       };
-      // TO RECEIVE MSG
+      // Add message seen functionality
+      function updateMessageStatus(messageId, status) {
+        if ((sender === 'lakshya' || sender === 'apoorva')) {
+          update(ref(db, "messages/" + messageId), {
+            status: status
+          });
+        }
+      }
+      // Update message display to include status
       onChildAdded(ref(db, "messages"), (data) => {
         let replyHtml = '';
         if (data.val().replyTo) {
@@ -315,12 +335,18 @@
           .replace(/'/g, "&#039;");
 
         if (data.val().sender == sender) {
+          const statusIcon = data.val().status === 'seen' ? '✓✓' : '✓';
+          const statusClass = data.val().status === 'seen' ? 'seen' : '';
+          
           messages.innerHTML +=
             `<div style='justify-content:end' class='outer' id="${data.key}">
               <div id='inner' class='me'>
                 ${replyHtml}
                 <small style='display:block;font-size:12px;opacity:0.8;margin-bottom:3px'>You</small>
-                <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">${escapedMsg}</div>
+                <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">
+                  ${escapedMsg}
+                  <span class="message-status ${statusClass}">${statusIcon}</span>
+                </div>
               </div>
             </div>`;
         } else {
@@ -332,6 +358,12 @@
                 <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">${escapedMsg}</div>
               </div>
             </div>`;
+
+          // Update seen status if message is from the other user (Lakshya/Apoorva)
+          if ((sender === 'lakshya' && data.val().sender === 'apoorva') || 
+              (sender === 'apoorva' && data.val().sender === 'lakshya')) {
+            updateMessageStatus(data.key, 'seen');
+          }
         }
         // Add notification for new messages
         if (data.val().sender !== sender && "Notification" in window && Notification.permission === "granted") {
