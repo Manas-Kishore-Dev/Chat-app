@@ -55,6 +55,17 @@
         font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         border: none;
         border-radius: 20px;
+        caret-color: #4CAF50;
+        caret-shape: bar;
+      }
+      @keyframes caretAnimation {
+        0% { caret-color: #4CAF50; }
+        50% { caret-color: transparent; }
+        100% { caret-color: #4CAF50; }
+      }
+      #msgTxt:focus {
+        animation: caretAnimation 1s ease-in-out infinite;
+        outline: none;
       }
       #msgTxt::placeholder {
         color: #666666;
@@ -152,12 +163,11 @@
         padding: 12px 15px;
         background: #1e1e1e;
         border-top: 1px solid #222222;
-        display: none;
         font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 14px;
         line-height: 1.4;
         box-sizing: border-box;
-        display: flex;
+        display: none;  /* Removed duplicate display property */
         justify-content: space-between;
         align-items: center;
       }
@@ -183,8 +193,12 @@
     <script>
       // Request notification permission when page loads
       document.addEventListener('DOMContentLoaded', function() {
-          if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-              Notification.requestPermission();
+          if ("Notification" in window) {
+              Notification.requestPermission().then(function(permission) {
+                  if (permission === "granted") {
+                      console.log("Notifications enabled");
+                  }
+              });
           }
       });
     </script>
@@ -318,6 +332,14 @@
                 <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">${escapedMsg}</div>
               </div>
             </div>`;
+        }
+        // Add notification for new messages
+        if (data.val().sender !== sender && "Notification" in window && Notification.permission === "granted") {
+          new Notification("New Message from " + data.val().sender, {
+            body: data.val().msg,
+            icon: "💬",
+            silent: false
+          });
         }
         messages.scrollTop = messages.scrollHeight;
       });
