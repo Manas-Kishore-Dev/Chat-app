@@ -8,6 +8,7 @@
       href="https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@10..72,100..900&display=swap"
       rel="stylesheet"
     />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
       body {
         margin: 0;
@@ -65,10 +66,14 @@
         color: white;
         border: none;
         border-radius: 50%;
-        font-size: 18px;
+        font-size: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
+        cursor: pointer;
+      }
+      #msgBtn .material-icons {
+        font-size: 20px;
       }
       .outer {
         width: 100%;
@@ -133,7 +138,7 @@
   </head>
 <body>
     <div class="top-bar">
-      <div class="logo">🌿 Zorgert</div>
+      <div class="logo">💬 ChatSphere</div>
       <div class="time" id="currentTime"></div>
     </div>
     <div class="divider"></div>
@@ -141,7 +146,7 @@
 
     <div id="sendMsg">
       <input type="text" id="msgTxt" placeholder="Type a message" onkeydown="if(event.key === 'Enter') module.sendMsg()" />
-      <button id="msgBtn" onclick="module.sendMsg()">↑</button>
+      <button id="msgBtn" onclick="module.sendMsg()"><span class="material-icons">send</span></button>
     </div>
 <script src="env.js"></script>
     <script>
