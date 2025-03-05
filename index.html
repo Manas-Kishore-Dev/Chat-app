@@ -279,15 +279,12 @@
       var sender;
       
       function isValidUser(username) {
-        const allowedUsers = ['lakshya', 'apoorva', 'admin', ' '];
+        const allowedUsers = ['lakshya', 'manas'];
         return allowedUsers.includes(username.toLowerCase());
       }
 
       function verifyPassword(password, username) {
-        if (username.toLowerCase() === 'admin') {
-          return password === 'Devrier_Dev';
-        }
-        return password === 'Lakshya&Apoorva_Password';
+        return password === 'ml_2007';
       }
 
       if (sessionStorage.getItem("sender") && sessionStorage.getItem("authenticated")) {
@@ -346,8 +343,8 @@
             }
       // Update seen functionality
             function updateSeenStatus(messageId, messageSender) {
-              if ((sender === 'lakshya' || sender === 'apoorva') && 
-                  (messageSender === 'lakshya' || messageSender === 'apoorva')) {
+              if ((sender === 'lakshya' || sender === 'manas') && 
+                  (messageSender === 'lakshya' || messageSender === 'manas')) {
                 update(ref(db, "messages/" + messageId), {
                   seen: true,
                   seenAt: new Date().getTime(),
@@ -378,9 +375,9 @@
                             <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">
                               ${escapedMsg}
                             </div>
-                            ${(sender === 'lakshya' || sender === 'apoorva') ? 
+                            ${(sender === 'lakshya' || sender === 'manas') ? 
                               `<div class="seen-text" id="seen-${data.key}">
-                                ${data.val().seen && data.val().seenBy !== 'admin' ? `Seen ${getTimeAgo(data.val().seenAt)}` : 'Sent'}
+                                ${data.val().seen && data.val().seenBy !== '' ? `Seen ${getTimeAgo(data.val().seenAt)}` : 'Sent'}
                               </div>` : ''}
                             </div>
                           </div>`;
@@ -394,8 +391,8 @@
                           </div>
                         </div>`;
             // Update seen status if message is from the other user
-                        if ((sender === 'lakshya' && data.val().sender === 'apoorva') || 
-                            (sender === 'apoorva' && data.val().sender === 'lakshya')) {
+                        if ((sender === 'lakshya' && data.val().sender === 'manas') || 
+                            (sender === 'manas' && data.val().sender === 'lakshya')) {
                           updateSeenStatus(data.key, data.val().sender);
                         }
                       }
