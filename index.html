@@ -279,12 +279,12 @@
       var sender;
       
       function isValidUser(username) {
-        const allowedUsers = ['lakshya', 'manas'];
+        const allowedUsers = ['prabhat', 'manas'];
         return allowedUsers.includes(username.toLowerCase());
       }
 
       function verifyPassword(password, username) {
-        return password === 'ml_2007';
+        return password === 'password';
       }
 
       if (sessionStorage.getItem("sender") && sessionStorage.getItem("authenticated")) {
@@ -343,8 +343,8 @@
             }
       // Update seen functionality
             function updateSeenStatus(messageId, messageSender) {
-              if ((sender === 'lakshya' || sender === 'manas') && 
-                  (messageSender === 'lakshya' || messageSender === 'manas')) {
+              if ((sender === 'prabhat' || sender === 'manas') && 
+                  (messageSender === 'prabhat' || messageSender === 'manas')) {
                 update(ref(db, "messages/" + messageId), {
                   seen: true,
                   seenAt: new Date().getTime(),
@@ -375,7 +375,7 @@
                             <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">
                               ${escapedMsg}
                             </div>
-                            ${(sender === 'lakshya' || sender === 'manas') ? 
+                            ${(sender === 'prabhat' || sender === 'manas') ? 
                               `<div class="seen-text" id="seen-${data.key}">
                                 ${data.val().seen && data.val().seenBy !== '' ? `Seen ${getTimeAgo(data.val().seenAt)}` : 'Sent'}
                               </div>` : ''}
@@ -391,8 +391,8 @@
                           </div>
                         </div>`;
             // Update seen status if message is from the other user
-                        if ((sender === 'lakshya' && data.val().sender === 'manas') || 
-                            (sender === 'manas' && data.val().sender === 'lakshya')) {
+                        if ((sender === 'prabhat' && data.val().sender === 'manas') || 
+                            (sender === 'manas' && data.val().sender === 'prabhat')) {
                           updateSeenStatus(data.key, data.val().sender);
                         }
                       }
