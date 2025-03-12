@@ -279,7 +279,7 @@
       var sender;
       
       function isValidUser(username) {
-        const allowedUsers = ['prabhat', 'manas'];
+        const allowedUsers = ['user2', 'user1'];
         return allowedUsers.includes(username.toLowerCase());
       }
 
@@ -343,8 +343,8 @@
             }
       // Update seen functionality
             function updateSeenStatus(messageId, messageSender) {
-              if ((sender === 'prabhat' || sender === 'manas') && 
-                  (messageSender === 'prabhat' || messageSender === 'manas')) {
+              if ((sender === 'user2' || sender === 'user1') && 
+                  (messageSender === 'user2' || messageSender === 'user1')) {
                 update(ref(db, "messages/" + messageId), {
                   seen: true,
                   seenAt: new Date().getTime(),
@@ -375,7 +375,7 @@
                             <div class="message-content" onclick="module.setReply('${data.key}', '${data.val().sender}', '${escapedMsg}')">
                               ${escapedMsg}
                             </div>
-                            ${(sender === 'prabhat' || sender === 'manas') ? 
+                            ${(sender === 'user2' || sender === 'user1') ? 
                               `<div class="seen-text" id="seen-${data.key}">
                                 ${data.val().seen && data.val().seenBy !== '' ? `Seen ${getTimeAgo(data.val().seenAt)}` : 'Sent'}
                               </div>` : ''}
@@ -391,8 +391,8 @@
                           </div>
                         </div>`;
             // Update seen status if message is from the other user
-                        if ((sender === 'prabhat' && data.val().sender === 'manas') || 
-                            (sender === 'manas' && data.val().sender === 'prabhat')) {
+                        if ((sender === 'user2' && data.val().sender === 'user1') || 
+                            (sender === 'user1' && data.val().sender === 'user2')) {
                           updateSeenStatus(data.key, data.val().sender);
                         }
                       }
